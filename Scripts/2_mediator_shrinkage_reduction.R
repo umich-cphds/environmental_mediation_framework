@@ -84,6 +84,12 @@ write.csv(bama.grouped.results,'bama.grouped.results.csv')
 ### using population value decomposition (Chen et al. 2018)                   ###  
 #################################################################################
 
+# NOTE: this current application is for a setting where the number of mediators is less than
+# the number of individuals in sample size (p<n scenario)
+# if your data have more mediators than the sample size, refer to script "gPVD" for example code
+# to implement an intial matrix decomposition step to reduce the dimensionality of your mediator matrix
+# prior to running this population value decomposition code below
+
 hdmm.apply<-function(dataset){
   d2<-dataset
   j=1
