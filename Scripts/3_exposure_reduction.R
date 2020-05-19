@@ -5,11 +5,8 @@ library(stats)
 library(epicalc)
 library(Hmisc)
 library(Epi)
-library(mediation)
 library(mgcv)
-library(devtools)
-install_github("oliverychen/PDM")
-library(PDM)
+
 
 
 d1<-read.csv("dataset.csv")
@@ -23,7 +20,7 @@ d1<-na.omit(d1) #ensure your is complete with no missing observations
 ##for data pre-processing: 
   ## make sure all of your categorical covariates are changed to binary dummy variables
     ## exclude the reference level, example: if BMI is 3-levels, do not include the lower reference binary variable
-  ## normalize your exposures either using log-transformation or standaridzation 
+  ## normalize your exposures either using log-transformation or standardization 
 ##Function components: 
   ##ind.data is the dataset which contains your predictors and covariates
   ##depen.data is the dataset which contains your outcome variable
@@ -139,7 +136,6 @@ aENET_fun = function(ind.data, depen.data, preds, covars, a){
   result.adenet = as.data.frame(result.adenet)
   result.adenet$loci = result.adenet$beta - 1.96*result.adenet$SE
   result.adenet$hici = result.adenet$beta + 1.96*result.adenet$SE
-  #weights = (beta.all[,1])[b]
   return(result.adenet)
 }
 
@@ -152,14 +148,14 @@ weights <- (results[,1])[2:(nexp+1)]
 #isolate your log-transformed or standardized exposure variables
 exp_mat <- as.matrix(d1[,colnames(d1) %in% rownames(results)[2:(nexp+1)]])
 
-#Construct environmental risk score by applying linear combinatino of weights and exposure matrix
+#Construct environmental risk score by applying linear combination of weights and exposure matrix
 ers <- exp_mat%*%as.matrix(weights, ncol = 1)
 
 #Combine the ERS to your dataset
 d1 <- cbind(d1, ers)
 
 # Now that ERS is added to your dataset, return to script 2_mediator_shrinkage_reduction
-# and re-run the BAMA and HDMM function with your new exposure ERS variables
+# and re-run the BAMA and HDMM functions with your new exposure ERS variables
 
 
 
