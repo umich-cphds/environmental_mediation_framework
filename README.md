@@ -12,4 +12,4 @@
 
 #Step 2 is chiefly focused on a setting where number of mediators is less than total sample size
 
-#If the user has a dataset where the number of mediators are greater than sample size, refer to script: gPVD.R for example code on implementing a preliminary matrix decomposition step prior to high-dimensaional mediation analysis
+#If the user has a dataset where the number of mediators are greater than sample size, refer to script: gPVD.R for example code on implementing a preliminary matrix decomposition step prior to high-dimensional mediation analysis
