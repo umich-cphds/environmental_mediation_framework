@@ -80,13 +80,13 @@ write.csv(bama.grouped.results,'bama.grouped.results.csv')
 
 
 #################################################################################
-### High-dimensional multivaratei mediation with mediator dimension reduction ###
+### High-dimensional multivariate mediation with mediator dimension reduction ###
 ### using population value decomposition (Chen et al. 2018)                   ###  
 #################################################################################
 
 # NOTE: this current application is for a setting where the number of mediators is less than
 # the number of individuals in sample size (p<n scenario)
-# if your data have more mediators than the sample size, refer to script "gPVD" for example code
+# if your data have more mediators than the sample size, refer to script "gPVD.R" for example code
 # to implement an intial matrix decomposition step to reduce the dimensionality of your mediator matrix
 # prior to running this population value decomposition code below
 
@@ -104,7 +104,7 @@ hdmm.apply<-function(dataset){
     est_w <- output$w1
     dm1 <- m1%*%as.matrix(est_w, ncol = 1)
     m<-lm(dm1~A+d2$covariate1+d2$covariate2+d2$covariate3+d2$covariate4,data=d2) #replace with your covariates
-    y<-lm(Y~A+dm1+d2$covariate1+d2$covariate2+d2$covariate3+d2$covariate4,data=d2) 
+    y<-lm(Y~A+dm1+d2$covariate1+d2$covariate2+d2$covariate3+d2$covariate4,data=d2) #replace with your covariates
     set.seed(111)
     med<-mediate(m,y,sims=2000,treat="A",mediator="dm1")
     results[j,2:42]<-cbind(nobs(y),med$d0, med$d0.ci[1], med$d0.ci[2], med$d0.p, med$d1, med$d1.ci[1], med$d1.ci[2], med$d1.p,
