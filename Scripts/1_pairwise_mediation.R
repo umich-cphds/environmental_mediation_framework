@@ -7,13 +7,13 @@ library(ggplot2)
 
 
 d1<-read.csv("dataset.csv")
-d1<-na.omit(d1) #ensure your is complete with no missing observations
+d1<-na.omit(d1) #ensure your data is complete with no missing observations
 #order your dataset's columns by: exposures, mediators, follwed by covariates and outcome
 
 #creating data frame to deposit results
 nexp<- #define number of exposure analytes in your dataset
 nmed<- #define number of mediators in your dataset
-ncovars<- #define number of covariates and outcome variable in yoru dataset
+ncovars<- #define number of covariates and outcome variable in your dataset
 med.results<-as.data.frame(matrix(nrow=(nexp*nmed),ncol=41))
 colnames(med.results)<-c('nobs', 'ACME.C','ACME.C.lo','ACME.C.hi','ACME.C.Pval','ACME.T','ACME.T.lo',
                          'ACME.T.hi','ACME.T.pval','ADE.C','ADE.C.lo','ADE.C.hi','ADE.C.Pval','ADE.T',
@@ -30,7 +30,9 @@ for(i in 1:nexp){
   for(j in (nexp+1):(nexp+nmed)){
     d2<-d1[,c(i,j,((nexp+nmed+1):(nexp+nmed+ncovars)))]
     set.seed(111)
+    #define your covariates as needed
     m<-lm(log(d2[,2])~log(d2[,1])+d2$covariate1+d2$covariate2+d2$covariate3+factor(d2$covariate4),data=d2)
+    #define your outcome variable below
     y<-lm(d2$outcome~log(d2[,1])+log(d2[, 2])+d2$covariate1+d2$covariate2+d2$covariate3+factor(d2$covariate4),data=d2)
     med<-mediate(m,y,sims=2000,treat="log(d2[, 1])",mediator="log(d2[, 2])")
     med.results[k,]<-cbind(nobs(y),med$d0, med$d0.ci[1], med$d0.ci[2], med$d0.p, med$d1, med$d1.ci[1], 
@@ -46,7 +48,7 @@ for(i in 1:nexp){
     k=k+1
   }
 }
-write.csv(med.results,'med.fga.results.csv')
+write.csv(med.results,'med.results.csv')
 
 
 
