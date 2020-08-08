@@ -2,10 +2,10 @@
 
 #There are three main scripts in this environmental mediaiton framework based on the approaches in the pipeline: 
 
-#Approach 1a: 1_pairwise_mediation.R
+#Approach 1a: 1a_pairwise_mediation.R
   #expected run time is approximately 3-5 minutes per mediation model
 
-#Approach 1b: 3_exposure_reduction.R
+#Approach 1b: 1b_exposure_reduction.R
   #expected run time is approximately 3-5 minutes per mediation model
 
 #Approach 2: 2_mediator_shrinkage_reduction.R
