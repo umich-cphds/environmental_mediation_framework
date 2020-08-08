@@ -3,7 +3,6 @@ library(epicalc)
 library(Hmisc)
 library(Epi)
 library(mediation)
-library(ggplot2)
 
 
 d1<-read.csv("dataset.csv")

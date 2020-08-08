@@ -154,8 +154,10 @@ ers <- exp_mat%*%as.matrix(weights, ncol = 1)
 #Combine the ERS to your dataset
 d1 <- cbind(d1, ers)
 
-# Now that ERS is added to your dataset, return to script 2_mediator_shrinkage_reduction
-# and re-run the BAMA and HDMM functions with your new exposure ERS variables
+# Now that ERS is added to your dataset, the user can either:
+# (1) Conduct pairwise mediation anlaysis with single mediators using script 1a_pairwise_mediation.R
+# or
+# (2) Conduct pairwise mediation analysis with multiple meidators using script 2_mediator_shrinkage_reduction.R 
 
 
 
