@@ -10,7 +10,7 @@ d1<-na.omit(d1) #ensure your is complete with no missing observations
 #creating data frame to deposit results
 nexp<- #define the number of exposure analytes in your dataset
 nmed<- #define the number of mediators in your dataset
-ncovars<- #define the number of covariates and outcome variable in yoru dataset
+ncovars<- #define the number of covariates and outcome variable in your dataset
   
 #read in a crosswalk data frame for differentiating mediators into groups
 #cross walk should have at least a column for mediator group identity, and a column for the name of each mediator
@@ -50,7 +50,7 @@ group.bama<-function(dataset){
   gbama.results[,2]<-rep(colnames(d2)[(-1):-(nexp+ncovars)],nexp)
   for (i in 1:nexp){
     Y<-as.numeric(d2$outcome) #repalce with your outcome variable
-    A<-log(d2[,i])
+    A<-log(d2[,i]) #exposure log-transformed; change as needed
     M<-as.matrix(log(d2[,-1:-(nexp+ncovars)]))
     C<-as.matrix(d2[,(nexp+1):(nexp+ncovars)])
     beta.m<-rep(0,ncol(M))
@@ -98,7 +98,7 @@ hdmm.apply<-function(dataset){
   results[,1]<-colnames(d2)[1:nexp]
   for (i in 1:nexp){
     Y<-as.numeric(d2$outcome) #replace with your outcome variable
-    A<-log(d2[,i])
+    A<-log(d2[,i]) #exposure log-transformed; change as needed
     m1<-as.matrix(log(d2[,-1:-(nexp+ncovars)]))
     output <- PDM_1(x=A,y=Y,m=m1,imax=100, tol=10^-{5}, theta=rep(1,5),w1=rep(1,ncol(m1)), interval=10^6, step=10^4)
     est_w <- output$w1
@@ -139,8 +139,55 @@ hdmm.all$group<-c(rep("group1",nexp),rep("group2",nexp),rep("group3",nexp),rep("
 write.csv(hdmm.all,'hdmm.results.csv')
 
 
+#################################################################################
+### HIMA: high-dimensional mediation analysis (Zhang et al. 2016)             ###
+#################################################################################
 
+## 
+install.packages("HIMA")
+library(HIMA)
 
+hima.apply<-function(dataset){
+  results<-as.data.frame(matrix(nrow=nmed*nexp,ncol=9))
+  j=1
+  for(i in 1:nexp){
+    d2<-dataset
+    Xvar<-log(d2[,i]) #exposure log-transformed; change as needed
+    Yvar<-d2$outcome
+    C<-as.matrix(d2[,(nexp+1):(nexp+ncovars)])
+    Mvars<-as.matrix(log(d2[,-1:-(nexp+ncovars)]))
+    hima.model<-hima(Xvar,Yvar,Mvars,COV.XM=C,COV.MY = C,family="gaussian")
+    print(hima.model)
+    if(length(hima.model)>0){
+      results[j:(j+dim(hima.model)[1]-1),1]<-colnames(d2)[i]
+      results[j:(j+dim(hima.model)[1]-1),2]<-rownames(hima.model)
+      results[j:(j+dim(hima.model)[1]-1),3:9]<-as.matrix(hima.model)
+      print(results[j:(j+dim(hima.model)[1]-1),1])
+      j=j+dim(hima.model)[1]
+    }else{
+      print("NULL")
+    }
+  }
+  colnames(results)<-c("alpha","beta","gamma","alpha*beta","% total effect","adjusted.p","BH.FDR","mediator","exp")
+  return(results)
+}
 
+hima.allmediators<-hima.apply(d2)
+hima.group1<-hima.apply(d.group1)
+hima.group2<-hima.apply(d.group2)
+hima.group3<-hima.apply(d.group3)
+hima.group4<-hima.apply(d.group4)
+hima.group5<-hima.apply(d.group5)
+hima.group6<-hima.apply(d.group6)
+hima.group7<-hima.apply(d.group7)
+
+write.csv(hima.all,"hima.allmediators.csv")
+write.csv(hima.group1,"hima.group1.csv")
+write.csv(hima.group2,"hima.group2.csv")
+write.csv(hima.group3,"hima.group3.csv")
+write.csv(hima.group4,"hima.group4.csv")
+write.csv(hima.group5,"hima.group5.csv")
+write.csv(hima.group6,"hima.group6.csv")
+write.csv(hima.group7,"hima.group7.csv")
 
 
