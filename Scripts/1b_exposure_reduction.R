@@ -22,14 +22,13 @@ d1<-na.omit(d1) #ensure your is complete with no missing observations
     ## exclude the reference level, example: if BMI is 3-levels, do not include the lower reference binary variable
   ## normalize your exposures either using log-transformation or standardization 
 ##Function components: 
-  ##ind.data is the dataset which contains your predictors and covariates
-  ##depen.data is the dataset which contains your outcome variable
+  ##ind.data is the matrix which contains only your predictors and covariates
+  ##depen.data is the vector which contains only your outcome variable
   ##preds is the number of predictors in your dataset: 
     ## defines variables in ind.data that WILL be penalized in ENET
   ##covars is the number of covariates in your dataset: 
     ## defines variables in ind.data that WILL NOT be penalized in ENET
   ##a is the range of covariates in ind.data - defines variables that WILL NOT be penalized in aENET
-  ##b extracts the range of rows from aENET output to be used for ERS - should only exclude first row (intercept)
 
 aENET_fun = function(ind.data, depen.data, preds, covars, a){
   ind.data<-data.matrix(ind.data)
@@ -155,9 +154,9 @@ ers <- exp_mat%*%as.matrix(weights, ncol = 1)
 d1 <- cbind(d1, ers)
 
 # Now that ERS is added to your dataset, the user can either:
-# (1) Conduct pairwise mediation anlaysis with single mediators using script 1a_pairwise_mediation.R
+# (1) Conduct pairwise mediation analysis with single mediators using script 1a_pairwise_mediation.R
 # or
-# (2) Conduct pairwise mediation analysis with multiple meidators using script 2_mediator_shrinkage_reduction.R 
+# (2) Conduct pairwise mediation analysis with multiple mediators using either script 2_mediator_shrinkage_reduction.R or script 2_apply_pathlasso.R
 
 
 

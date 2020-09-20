@@ -6,6 +6,9 @@ library(PDM)
 d1<-read.csv("dataset.csv")
 
 d1<-na.omit(d1) #ensure your is complete with no missing observations
+#order your dataset's columns by: exposures, mediators, follwed by covariates and outcome
+#transform your exposures and mediators as you see fit/necessary according to normality assumptions
+
 
 #creating data frame to deposit results
 nexp<- #define the number of exposure analytes in your dataset
@@ -15,10 +18,6 @@ ncovars<- #define the number of covariates and outcome variable in your dataset
 #read in a crosswalk data frame for differentiating mediators into groups
 #cross walk should have at least a column for mediator group identity, and a column for the name of each mediator
 crosswalk <- read.csv("crosswalk.csv", header=T, strip.white=T, stringsAsFactors=F)
-
-################################################################################
-### Mediator shrinkage using Bayesian mediation analysis (Song et al. 2020) ####
-################################################################################
 
 
 #subset crosswalk for the groups you want to create
@@ -32,49 +31,55 @@ crosswalk.group6<-subset(crosswalk,crosswalk$group_name=="group 6")
 crosswalk.group7<-subset(crosswalk,crosswalk$group_name=="group 7")
 
 #subset dataset so that each subset only contains mediators from one group
-#the bama application function will require your columns to be ordered by exposures varaibles, then covariates, then mediators
-d.group1<-cbind(d1[c("exposure variables","covariates")], d1[,colnames(d1) %in% unique(crosswalk.group1$mediator_name)])
-d.group2<-cbind(d1[c("exposure variables","covariates")], d1[,colnames(d1) %in% unique(crosswalk.group2$mediator_name)])
-d.group3<-cbind(d1[c("exposure variables","covariates")], d1[,colnames(d1) %in% unique(crosswalk.group3$mediator_name)])
-d.group4<-cbind(d1[c("exposure variables","covariates")], d1[,colnames(d1) %in% unique(crosswalk.group4$mediator_name)])
-d.group5<-cbind(d1[c("exposure variables","covariates")], d1[,colnames(d1) %in% unique(crosswalk.group5$mediator_name)])
-d.group6<-cbind(d1[c("exposure variables","covariates")], d1[,colnames(d1) %in% unique(crosswalk.group6$mediator_name)])
-d.group7<-cbind(d1[c("exposure variables","covariates")], d1[,colnames(d1) %in% unique(crosswalk.group7$mediator_name)])
+#the bama application function will require your columns to be ordered by exposures varaibles, then mediators, then covariates and outcome
+d.group1<-cbind(d1[c("exposure variables")], d1[,colnames(d1) %in% unique(crosswalk.group1$mediator_name)],d1[c("covariates,outcome")])
+d.group2<-cbind(d1[c("exposure variables")], d1[,colnames(d1) %in% unique(crosswalk.group2$mediator_name)],d1[c("covariates,outcome")])
+d.group3<-cbind(d1[c("exposure variables")], d1[,colnames(d1) %in% unique(crosswalk.group3$mediator_name)],d1[c("covariates,outcome")])
+d.group4<-cbind(d1[c("exposure variables")], d1[,colnames(d1) %in% unique(crosswalk.group4$mediator_name)],d1[c("covariates,outcome")])
+d.group5<-cbind(d1[c("exposure variables")], d1[,colnames(d1) %in% unique(crosswalk.group5$mediator_name)],d1[c("covariates,outcome")])
+d.group6<-cbind(d1[c("exposure variables")], d1[,colnames(d1) %in% unique(crosswalk.group6$mediator_name)],d1[c("covariates,outcome")])
+d.group7<-cbind(d1[c("exposure variables")], d1[,colnames(d1) %in% unique(crosswalk.group7$mediator_name)],d1[c("covariates,outcome")])
 
-#BAMA application
-group.bama<-function(dataset){
+
+################################################################################
+### Mediator shrinkage using Bayesian mediation analysis (Song et al. 2020) ####
+################################################################################
+
+bama.apply<-function(dataset){
   d2<-dataset
   j=1
-  k=ncol(d2[,-1:-(nexp+ncovars)]) 
-  gbama.results<-as.data.frame(matrix(nrow=(nexp*(ncol(d2[,-1:-(nexp+ncovars)]))),ncol=3))
-  gbama.results[,2]<-rep(colnames(d2)[(-1):-(nexp+ncovars)],nexp)
+  k=ncol(d2[,(nexp+1):(ncol(d2)-ncovars)]) 
+  l=ncol(d2[,(nexp+1):(ncol(d2)-ncovars)]) 
+  results<-as.data.frame(matrix(nrow=(nexp*l),ncol=3)) 
+  results[,2]<-rep(colnames(d2)[(nexp+1):(l+nexp)],nexp) 
   for (i in 1:nexp){
-    Y<-as.numeric(d2$outcome) #repalce with your outcome variable
-    A<-log(d2[,i]) #exposure log-transformed; change as needed
-    M<-as.matrix(log(d2[,-1:-(nexp+ncovars)]))
-    C<-as.matrix(d2[,(nexp+1):(nexp+ncovars)])
+    Y<-as.numeric(d2$outcome) #replace with your outcome variable
+    A<-d2[,i] 
+    M<-as.matrix(d2[,(nexp+1):(l+nexp)])
+    C<-as.matrix(d2[,(nexp+l+1):(nexp+l+ncovars)])
     beta.m<-rep(0,ncol(M))
     alpha.a<-rep(0,ncol(M))
     set.seed(111)
     bama.out<-bama(Y,A,M,C,beta.m,alpha.a,burnin=10000,ndraws=1000)
     pips<-summary(bama.out)[,4]
-    gbama.results[j:k,3]<-pips
-    gbama.results[j:k,1]<-colnames(d2)[i]
-    print(gbama.results[k,])
-    j=j+ncol(d2[,-1:-(nexp+ncovars)])
-    k=k+ncol(d2[,-1:-(nexp+ncovars)])
+    results[j:k,3]<-pips
+    results[j:k,1]<-colnames(d2)[i]
+    print(results[k,])
+    j=j+l
+    k=k+l
   }
-  return(gbama.results)
+  return(results)
 }
-pips.group1<-group.bama(d.group1)
-pips.group2<-group.bama(d.group2)
-pips.group3<-group.bama(d.group3)
-pips.group4<-group.bama(d.group4)
-pips.group5<-group.bama(d.group5)
-pips.group6<-group.bama(d.group6)
-pips.group7<-group.bama(d.group7)
+pips.allmediators<-bama.apply(d1)
+pips.group1<-bama.apply(d.group1)
+pips.group2<-bama.apply(d.group2)
+pips.group3<-bama.apply(d.group3)
+pips.group4<-bama.apply(d.group4)
+pips.group5<-bama.apply(d.group5)
+pips.group6<-bama.apply(d.group6)
+pips.group7<-bama.apply(d.group7)
 
-bama.grouped.results<-rbind(pips.group1,pips.group2,pips.group3,pips.group4,pips.group5,pips.group6,pips.group7)
+bama.results<-rbind(pips.group1,pips.group2,pips.group3,pips.group4,pips.group5,pips.group6,pips.group7)
 
 write.csv(bama.grouped.results,'bama.grouped.results.csv')
 
@@ -93,13 +98,13 @@ write.csv(bama.grouped.results,'bama.grouped.results.csv')
 hdmm.apply<-function(dataset){
   d2<-dataset
   j=1
-  k=ncol(d2[,-1:-(nexp+ncovars)])
+  k=ncol(d2[,(nexp+1):(ncol(d2)-ncovars)])
   results<-as.data.frame(matrix(nrow=nexp,ncol=42))
   results[,1]<-colnames(d2)[1:nexp]
   for (i in 1:nexp){
     Y<-as.numeric(d2$outcome) #replace with your outcome variable
-    A<-log(d2[,i]) #exposure log-transformed; change as needed
-    m1<-as.matrix(log(d2[,-1:-(nexp+ncovars)]))
+    A<-d2[,i] 
+    m1<-as.matrix(d2[,(nexp+1):(k+nexp)])
     output <- PDM_1(x=A,y=Y,m=m1,imax=100, tol=10^-{5}, theta=rep(1,5),w1=rep(1,ncol(m1)), interval=10^6, step=10^4)
     est_w <- output$w1
     dm1 <- m1%*%as.matrix(est_w, ncol = 1)
@@ -118,7 +123,7 @@ hdmm.apply<-function(dataset){
   }
   return(results)
 }
-
+hdmm.allmediators<-hdmm.apply(d1)
 hdmm.group1<-hdmm.apply(d.group1)
 hdmm.group2<-hdmm.apply(d.group2)
 hdmm.group3<-hdmm.apply(d.group3)
@@ -127,13 +132,13 @@ hdmm.group5<-hdmm.apply(d.group5)
 hdmm.group6<-hdmm.apply(d.group6)
 hdmm.group7<-hdmm.apply(d.group7)
 
-hdmm.all<-rbind(hdmm.group1,hdmm.group2,hdmm.group3,hdmm.group4,hdmm.group5,hdmm.group6,hdmm.group7,hdmm.group8)
+hdmm.all<-rbind(hdmm.allmediators,hdmm.group1,hdmm.group2,hdmm.group3,hdmm.group4,hdmm.group5,hdmm.group6,hdmm.group7,hdmm.group8)
 colnames(hdmm.all)<-c('exp', 'nobs', 'ACME.C','ACME.C.lo','ACME.C.hi','ACME.C.Pval','ACME.T','ACME.T.lo','ACME.T.hi',
                          'ACME.T.pval','ADE.C','ADE.C.lo','ADE.C.hi','ADE.C.Pval','ADE.T', 'ADE.T.lo','ADE.T.hi','ADE.T.pval',
                          'PMed.C','PMed.C.lo','PMed.C.hi','PMed.C.pval','PMed.T','PMed.T.lo','PMed.T.hi','PMed.T.pval','TE',
                          'TE.lo','TE.hi','TE.pval','ACME.avg','ACME.avg.lo','ACME.avg.hi','ACME.avg.pval','ADE.avg',
                          'ADE.avg.lo','ADE.avg.hi','ADE.avg.pval','PMed.avg','PMed.avg.lo','PMed.avg.hi','PMed.avg.pval')
-hdmm.all$group<-c(rep("group1",nexp),rep("group2",nexp),rep("group3",nexp),rep("group4",nexp),
+hdmm.all$group<-c(rep("allmediators",nexp), rep("group1",nexp),rep("group2",nexp),rep("group3",nexp),rep("group4",nexp),
                      rep("group5",nexp),rep("group6",nexp),rep("group7",nexp))
 
 write.csv(hdmm.all,'hdmm.results.csv')
@@ -152,10 +157,11 @@ hima.apply<-function(dataset){
   j=1
   for(i in 1:nexp){
     d2<-dataset
-    Xvar<-log(d2[,i]) #exposure log-transformed; change as needed
-    Yvar<-d2$outcome
-    C<-as.matrix(d2[,(nexp+1):(nexp+ncovars)])
-    Mvars<-as.matrix(log(d2[,-1:-(nexp+ncovars)]))
+    k=ncol(d2[,(nexp+1):(ncol(d2)-ncovars)])
+    Xvar<-d2[,i] 
+    Yvar<-d2$outcome #change with your outcome variable
+    C<-as.matrix(d2[,(nexp+k+1):(nexp+k+ncovars)])
+    Mvars<-as.matrix(d2[,(nexp+1):(k+nexp)])
     hima.model<-hima(Xvar,Yvar,Mvars,COV.XM=C,COV.MY = C,family="gaussian")
     print(hima.model)
     if(length(hima.model)>0){
@@ -172,7 +178,7 @@ hima.apply<-function(dataset){
   return(results)
 }
 
-hima.allmediators<-hima.apply(d2)
+hima.allmediators<-hima.apply(d1)
 hima.group1<-hima.apply(d.group1)
 hima.group2<-hima.apply(d.group2)
 hima.group3<-hima.apply(d.group3)

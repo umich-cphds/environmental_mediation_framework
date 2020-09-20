@@ -9,17 +9,19 @@ source("functions_3_VSS_adp.R")
 
 d1<-read.csv("dataset.csv")
 d1<-na.omit(d1) #ensure your is complete with no missing observations
-#order dataset as exposures, mediators, then covariates
+#order dataset as exposures, mediators, then covariates and outcome
+#pathlasso.apply function will automatically standardize exposures, mediators, and outcome
+
 #define:
 nexp<- #define the number of exposure analytes in your dataset
 nmed<- #define the number of mediators in your dataset
 ncovars<- #define the number of covariates and outcome variable in your dataset
   
-#pathlass.apply function asks you to input the main exposure of interest
-pathlasso.apply<-function(exposure){
+#pathlass.apply function asks you to input the main exposure and outcome of interest
+pathlasso.apply<-function(exposure,outcome){
 A<-exposure
 M<-d1[,((nmed):(nexp+nmed+1))]
-Y<-d1$outcome #repalce with your outcome variable
+Y<-outcome #replace with your outcome variable
 q=nmed
 # approximate covariance matrix
 Sigma10<-diag(rep(1,q))
@@ -76,7 +78,7 @@ return(results)
 
 }
 
-pathlasso_results<- pathlasso.apply(d1$exposure_variable_of_interest)
+pathlasso_results<- pathlasso.apply(d1$exposure_variable,d1$outcome_variable)
 
 write.csv(pathlasso_results[[1]],"pathwaylasso_Alpha_selection_est.csv") #exposure to mediator selection
 write.csv(pathlasso_results[[2]],"pathwaylasso_Beta_selection_est.csv") #mediator to outcome selection
